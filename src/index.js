@@ -114,19 +114,19 @@ export default class RNPickerSelect extends PureComponent {
     }
 
     static getDerivedStateFromProps(nextProps, prevState) {
-     const newItems = RNPickerSelect.handlePlaceholder({
-      placeholder: nextProps.placeholder
-    }).concat(nextProps.items);
-    const { selectedItem, idx } = RNPickerSelect.getSelectedItem({
-      items: newItems,
-      key: nextProps.itemKey,
-      value: nextProps.value
-    });
-    return {
-      items: newItems,
-      selectedItem: selectedItem
-    };
-  }
+        const newItems = RNPickerSelect.handlePlaceholder({
+         placeholder: nextProps.placeholder
+       }).concat(nextProps.items);
+       const { selectedItem, idx } = RNPickerSelect.getSelectedItem({
+         items: newItems,
+         key: nextProps.itemKey,
+         value: nextProps.value
+       });
+       return {
+         items: newItems,
+         selectedItem: selectedItem
+       };
+     }
 
     constructor(props) {
         super(props);
@@ -172,9 +172,9 @@ export default class RNPickerSelect extends PureComponent {
     }
 
     onValueChange(value, index) {
-    const { onValueChange } = this.props;
-    onValueChange(value, index);
-  }
+        const { onValueChange } = this.props;
+        onValueChange(value, index);
+    }
 
     onOrientationChange({ nativeEvent }) {
         this.setState({
