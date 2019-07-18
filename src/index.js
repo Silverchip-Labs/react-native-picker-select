@@ -114,34 +114,19 @@ export default class RNPickerSelect extends PureComponent {
     }
 
     static getDerivedStateFromProps(nextProps, prevState) {
-        // update items if items or placeholder prop changes
-        const items = RNPickerSelect.handlePlaceholder({
-            placeholder: nextProps.placeholder,
-        }).concat(nextProps.items);
-        const itemsChanged = !isEqual(prevState.items, items);
-
-        // update selectedItem if value prop is defined and differs from currently selected item
-        const { selectedItem, idx } = RNPickerSelect.getSelectedItem({
-            items,
-            key: nextProps.itemKey,
-            value: nextProps.value,
-        });
-        const selectedItemChanged =
-            !isEqual(nextProps.value, undefined) && !isEqual(prevState.selectedItem, selectedItem);
-
-        if (itemsChanged || selectedItemChanged) {
-            if (selectedItemChanged) {
-                nextProps.onValueChange(selectedItem.value, idx);
-            }
-
-            return {
-                ...(itemsChanged ? { items } : {}),
-                ...(selectedItemChanged ? { selectedItem } : {}),
-            };
-        }
-
-        return null;
-    }
+     const newItems = RNPickerSelect.handlePlaceholder({
+      placeholder: nextProps.placeholder
+    }).concat(nextProps.items);
+    const { selectedItem, idx } = RNPickerSelect.getSelectedItem({
+      items: newItems,
+      key: nextProps.itemKey,
+      value: nextProps.value
+    });
+    return {
+      items: newItems,
+      selectedItem: selectedItem
+    };
+  }
 
     constructor(props) {
         super(props);
@@ -187,16 +172,9 @@ export default class RNPickerSelect extends PureComponent {
     }
 
     onValueChange(value, index) {
-        const { onValueChange } = this.props;
-
-        onValueChange(value, index);
-
-        this.setState((prevState) => {
-            return {
-                selectedItem: prevState.items[index],
-            };
-        });
-    }
+    const { onValueChange } = this.props;
+    onValueChange(value, index);
+  }
 
     onOrientationChange({ nativeEvent }) {
         this.setState({
