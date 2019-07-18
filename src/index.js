@@ -1,6 +1,5 @@
 import React, { PureComponent } from 'react';
 import {
-    ColorPropType,
     Keyboard,
     Modal,
     Picker,
@@ -12,57 +11,9 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
-import PropTypes from 'prop-types';
 import isEqual from 'lodash.isequal';
 
 export default class RNPickerSelect extends PureComponent {
-    static propTypes = {
-        onValueChange: PropTypes.func.isRequired,
-        items: PropTypes.arrayOf(
-            PropTypes.shape({
-                label: PropTypes.string.isRequired,
-                value: PropTypes.any.isRequired,
-                key: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-                color: ColorPropType,
-            })
-        ).isRequired,
-        value: PropTypes.any, // eslint-disable-line react/forbid-prop-types
-        placeholder: PropTypes.shape({
-            label: PropTypes.string,
-            value: PropTypes.any,
-            key: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-            color: ColorPropType,
-        }),
-        disabled: PropTypes.bool,
-        itemKey: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-        style: PropTypes.shape({}),
-        children: PropTypes.any, // eslint-disable-line react/forbid-prop-types
-        placeholderTextColor: ColorPropType, // deprecated
-        useNativeAndroidPickerStyle: PropTypes.bool,
-
-        // Custom Modal props (iOS only)
-        hideDoneBar: PropTypes.bool, // deprecated
-        doneText: PropTypes.string,
-        onDonePress: PropTypes.func,
-        onUpArrow: PropTypes.func,
-        onDownArrow: PropTypes.func,
-        onOpen: PropTypes.func,
-        onClose: PropTypes.func,
-
-        // Modal props (iOS only)
-        modalProps: PropTypes.shape({}),
-
-        // TextInput props (iOS only)
-        textInputProps: PropTypes.shape({}),
-
-        // Picker props
-        pickerProps: PropTypes.shape({}),
-
-        // Custom Icon
-        Icon: PropTypes.func,
-        InputAccessoryView: PropTypes.func,
-    };
-
     static defaultProps = {
         value: undefined,
         placeholder: {
@@ -90,59 +41,12 @@ export default class RNPickerSelect extends PureComponent {
         InputAccessoryView: null,
     };
 
-    static handlePlaceholder({ placeholder }) {
-        if (isEqual(placeholder, {})) {
-            return [];
-        }
-        return [placeholder];
-    }
-
-    static getSelectedItem({ items, key, value }) {
-        let idx = items.findIndex((item) => {
-            if (item.key && key) {
-                return isEqual(item.key, key);
-            }
-            return isEqual(item.value, value);
-        });
-        if (idx === -1) {
-            idx = 0;
-        }
-        return {
-            selectedItem: items[idx] || {},
-            idx,
-        };
-    }
-
-    static getDerivedStateFromProps(nextProps, prevState) {
-        const newItems = RNPickerSelect.handlePlaceholder({
-         placeholder: nextProps.placeholder
-       }).concat(nextProps.items);
-       const { selectedItem, idx } = RNPickerSelect.getSelectedItem({
-         items: newItems,
-         key: nextProps.itemKey,
-         value: nextProps.value
-       });
-       return {
-         items: newItems,
-         selectedItem: selectedItem
-       };
-     }
-
     constructor(props) {
         super(props);
-
-        const items = RNPickerSelect.handlePlaceholder({
-            placeholder: this.props.placeholder,
-        }).concat(this.props.items);
-
-        const { selectedItem } = RNPickerSelect.getSelectedItem({
-            items,
-            key: this.props.itemKey,
-            value: this.props.value,
-        });
+        const { items = [], placeholder = {}, value } = this.props;
+        const selectedItem = items.find(item => item.value === value) || placeholder;
 
         this.state = {
-            items,
             selectedItem,
             showPicker: false,
             animationType: undefined,
@@ -155,8 +59,16 @@ export default class RNPickerSelect extends PureComponent {
         this.onOrientationChange = this.onOrientationChange.bind(this);
         this.setInputRef = this.setInputRef.bind(this);
         this.togglePicker = this.togglePicker.bind(this);
-        this.triggerDoneCallback = this.triggerDoneCallback.bind(this);
         this.renderInputAccessoryView = this.renderInputAccessoryView.bind(this);
+    }
+
+    _getItems = () => {
+        const { items = [], placeholder } = this.props;  
+        if (!placeholder || isEqual(placeholder, {})) {
+            return items;
+        }
+
+        return [placeholder, ...items];
     }
 
     onUpArrow() {
@@ -172,6 +84,9 @@ export default class RNPickerSelect extends PureComponent {
     }
 
     onValueChange(value, index) {
+        const { items, placeholder = {} } = this.props;
+        const selectedItem = items.find(item => item.value === value) || placeholder;
+        this.setState({ selectedItem });
         const { onValueChange } = this.props;
         onValueChange(value, index);
     }
@@ -188,8 +103,9 @@ export default class RNPickerSelect extends PureComponent {
 
     getPlaceholderStyle() {
         const { placeholder, placeholderTextColor, style } = this.props;
+        const { selectedItem } = this.state;
 
-        if (!isEqual(placeholder, {}) && this.state.selectedItem.label === placeholder.label) {
+        if (!isEqual(placeholder, {}) && selectedItem.label === placeholder.label) {
             return {
                 ...defaultStyles.placeholder,
                 color: placeholderTextColor, // deprecated
@@ -208,13 +124,6 @@ export default class RNPickerSelect extends PureComponent {
 
         if (this.state.showPicker && onClose) {
             onClose();
-        }
-    }
-
-    triggerDoneCallback() {
-        const { hideDoneBar, onDonePress } = this.props;
-        if (!hideDoneBar && onDonePress) {
-            onDonePress();
         }
     }
 
@@ -240,22 +149,17 @@ export default class RNPickerSelect extends PureComponent {
                     animationType: animate ? animationType : undefined,
                     showPicker: !prevState.showPicker,
                 };
-            },
-            () => {
-                if (postToggleCallback) {
-                    postToggleCallback();
-                }
             }
         );
     }
 
     renderPickerItems() {
-        return this.state.items.map((item) => {
+        return this._getItems().map((item) => {
             return (
                 <Picker.Item
                     label={item.label}
                     value={item.value}
-                    key={item.key || item.label}
+                    key={item.key || item.label + item.value}
                     color={item.color}
                 />
             );
@@ -490,7 +394,6 @@ export default class RNPickerSelect extends PureComponent {
         if (children || !useNativeAndroidPickerStyle) {
             return this.renderAndroidHeadless();
         }
-
         return this.renderAndroidNativePickerStyle();
     }
 }
