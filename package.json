@@ -26,6 +26,7 @@
         "src/index.js"
     ],
     "dependencies": {
+        "@react-native-picker/picker": "^1.8.3",
         "lodash.isequal": "^4.5.0"
     },
     "devDependencies": {

@@ -2,7 +2,6 @@ import React, { PureComponent } from 'react';
 import {
     Keyboard,
     Modal,
-    Picker,
     Platform,
     StyleSheet,
     Text,
@@ -12,6 +11,7 @@ import {
     View,
 } from 'react-native';
 import isEqual from 'lodash.isequal';
+import { Picker } from '@react-native-picker/picker';
 
 export default class RNPickerSelect extends PureComponent {
     static defaultProps = {
